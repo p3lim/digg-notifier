@@ -1,0 +1,21 @@
+{
+	"manifest_version": 2,
+	"name": "Digg Notifier",
+	"description": "Shows unread article count from Digg Reader",
+	"version": "0.1.0",
+	"options_page": "options.html",
+	"icons": {
+		"128": "/assets/images/icon128.png",
+		"48": "/assets/images/icon48.png"
+	},
+	"permissions": [
+		"tabs", "webRequest", "alarms", "notifications", "https://digg.com/*"
+	],
+	"browser_action": {
+		"default_icon": "assets/images/icon_disabled.png"
+	},
+	"background": {
+		"persistent": true,
+		"scripts": ["assets/js/background.js"]
+	}
+}
