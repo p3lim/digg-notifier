@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Digg Notifier",
 	"description": "Shows unread article count from Digg Reader",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"options_page": "options.html",
 	"icons": {
 		"128": "/assets/images/icon128.png",
