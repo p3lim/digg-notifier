@@ -16,7 +16,7 @@
 		"scripts": ["assets/js/background.js"]
 	},
 	"permissions": [
-		"webRequest", "alarms", "notifications", "https://digg.com/*"
+		"storage", "webRequest", "alarms", "notifications", "https://digg.com/*"
 	],
 	"options_ui": {
 		"page": "options.html",

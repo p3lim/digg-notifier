@@ -17,24 +17,26 @@ var createIcon = function(callback){
 };
 
 var updateNotifications = function(count){
-	if(localStorage.getItem('notifications') === 'true'){
-		chrome.tabs.query({
-			currentWindow: true,
-			active: true,
-			url: path + 'reader*'
-		}, function(tabs){
-			if(!tabs.length){
-				chrome.notifications.clear('digg-notifier', function(){
-					chrome.notifications.create('digg-notifier', {
-						type: 'basic',
-						iconUrl: 'assets/images/icon128.png',
-						title: 'Digg Reader',
-						message: count + ' unread article' + (count > 1 ? 's' : '')
-					}, function(){});
-				});
-			}
-		});
-	}
+	chrome.storage.sync.get('notifications', function(settings){
+		if(settings.notifications){
+			chrome.tabs.query({
+				currentWindow: true,
+				active: true,
+				url: path + 'reader*'
+			}, function(tabs){
+				if(!tabs.length){
+					chrome.notifications.clear('digg-notifier', function(){
+						chrome.notifications.create('digg-notifier', {
+							type: 'basic',
+							iconUrl: 'assets/images/icon128.png',
+							title: 'Digg Reader',
+							message: count + ' unread article' + (count > 1 ? 's' : '')
+						}, function(){});
+					});
+				}
+			});
+		}
+	});
 };
 
 var lastCount;
@@ -94,30 +96,33 @@ var listCallback = function(details){
 }
 
 var onInitialize = function(){
-	if(!localStorage.getItem('upgrade')){
-		localStorage.clear();
+	chrome.storage.sync.get(null, function(settings){
+		if(!settings.upgrade){
+			chrome.storage.sync.set(defaults);
+		} else if(settings.upgrade < defaults.upgrade){
+			for(var key in settings){
+				if(defaults[key] === undefined)
+					chrome.storage.sync.remove(key)
+			}
 
-		for(var key in defaults){
-			if(key !== null)
-				localStorage.setItem(key, defaults[key]);
+			for(var key in defaults){
+				if(!settings[key]){
+					var obj = {}
+					obj[key] = defaults[key];
+					chrome.storage.sync.set(obj);
+				}
+			}
+
+			chrome.storage.sync.set({
+				upgrade: defaults.upgrade
+			});
 		}
-	} else if(localStorage.getItem('upgrade') < defaults.upgrade){
-		for(var index = 0; index < localStorage.length; index++){
-			var key = localStorage.key(index);
-			if(defaults[key] === undefined)
-				localStorage.removeItem(key);
-		}
+	});
 
-		for(var key in defaults){
-			if(localStorage.getItem(key) === null)
-				localStorage.setItem(key, defaults[key]);
-		}
-
-		localStorage.setItem('upgrade', defaults.upgrade);
-	}
-
-	chrome.alarms.create('digg-notifier', {
-		periodInMinutes: +localStorage.getItem('interval')
+	chrome.storage.sync.get('interval', function(settings){
+		chrome.alarms.create('digg-notifier', {
+			periodInMinutes: +settings.interval
+		});
 	});
 
 	chrome.webRequest.onBeforeRequest.addListener(markCallback, {
@@ -166,13 +171,11 @@ chrome.alarms.onAlarm.addListener(function(alarm){
 		getUnread();
 });
 
-chrome.runtime.onMessage.addListener(function(message, sender){
-	if(message.interval){
-		localStorage.setItem('interval', message.interval);
-
+chrome.storage.onChanged.addListener(function(changes, area){
+	if(changes.interval){
 		chrome.alarms.clear('digg-notifier');
 		chrome.alarms.create('digg-notifier', {
-			periodInMinutes: +message.interval
+			periodInMinutes: changes.interval.newValue
 		});
 	}
 });

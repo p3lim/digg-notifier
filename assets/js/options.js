@@ -1,7 +1,3 @@
-var inputChange = function(){
-	localStorage.setItem(this.id, this.checked);
-};
-
 var formatTime = function(value){
 	if(value > 60)
 		return 'hours';
@@ -13,32 +9,28 @@ var formatTime = function(value){
 		return 'minute';
 };
 
-document.addEventListener('DOMContentLoaded', function(){
-	[].forEach.call(this.querySelectorAll('input'), function(input){
-		input.addEventListener('change', inputChange);
-		input.checked = localStorage.getItem(input.id) === 'true';
-	});
+var inputChange = function(){
+	var obj = {};
+	obj[this.id] = this.checked;
+	chrome.storage.sync.set(obj);
+};
 
-	var interval = +localStorage.getItem('interval');
-	var type = this.querySelector('.interval .type');
-	type.innerText = formatTime(interval);
-
-	var value = this.querySelector('.interval .value');
-	value.innerText = interval;
-	value.addEventListener('mousewheel', function(event){
+var valueChange = function(event){
+	var value = this;
+	chrome.storage.sync.get('interval', function(settings){
+		var newValue, oldValue = settings.interval;
 		var multiplier = event.shiftKey ? 5 : 1;
-		var newValue;
 
 		if(event.wheelDelta > 0){
-			if(interval >= 60)
-				newValue = interval + 60;
+			if(oldValue >= 60)
+				newValue = oldValue + 60;
 			else
-				newValue = Math.min(interval + (1 * multiplier), 60);
+				newValue = Math.min(oldValue + (1 * multiplier), 60);
 		} else {
-			if(interval <= 60)
-				newValue = interval - (1 * multiplier);
+			if(oldValue <= 60)
+				newValue = oldValue - (1 * multiplier);
 			else
-				newValue = interval - 60;
+				newValue = oldValue - 60;
 		}
 
 		if(newValue < 1)
@@ -46,21 +38,34 @@ document.addEventListener('DOMContentLoaded', function(){
 		else if(newValue > 1440)
 			newValue = 1440;
 
-		console.log(newValue);
+		if(newValue != oldValue){
+			value.innerText = newValue >= 60 ? newValue / 60 : newValue;
+			value.string.innerText = formatTime(newValue);
 
-		if(newValue != interval){
-			interval = newValue;
-
-			if(interval / 60 >= 1)
-				this.innerText = interval / 60;
-			else
-				this.innerText = interval;
-
-			type.innerText = formatTime(interval);
-
-			chrome.runtime.sendMessage({
-				interval: interval
+			chrome.storage.sync.set({
+				interval: newValue
 			});
 		}
+	});
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+	[].forEach.call(this.querySelectorAll('input'), function(input){
+		input.addEventListener('change', inputChange);
+
+		chrome.storage.sync.get(input.id, function(settings){
+			input.checked = settings[input.id]
+		});
+	});
+
+	var type = this.querySelector('.interval .type');
+	var value = this.querySelector('.interval .value');
+	value.string = type;
+	value.addEventListener('mousewheel', valueChange);
+
+	chrome.storage.sync.get('interval', function(settings){
+		var interval = settings.interval;
+		type.innerText = formatTime(interval);
+		value.innerText = interval >= 60 ? interval / 60 : interval;
 	});
 });
