@@ -5,17 +5,6 @@ var defaults = {
 	'upgrade': 1
 };
 
-var context;
-var createIcon = function(callback){
-	var canvas = document.createElement('canvas');
-	canvas.height = canvas.width = 19;
-
-	context = canvas.getContext('2d');
-	context.image = new Image();
-	context.image.src = 'assets/images/icon_enabled.png';
-	context.image.onload = callback;
-};
-
 var updateNotifications = function(count){
 	chrome.storage.sync.get('notifications', function(settings){
 		if(settings.notifications){
@@ -130,7 +119,7 @@ var onInitialize = function(){
 		types: ['xmlhttprequest']
 	}, ['requestBody']);
 
-	createIcon(getUnread);
+	getUnread();
 };
 
 chrome.runtime.onStartup.addListener(onInitialize);
