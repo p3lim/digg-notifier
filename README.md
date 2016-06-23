@@ -7,6 +7,4 @@ to your subscriptions.
 
 ## Install
 
-You can install this extension directly from the
-Google Chrome webstore by clicking this banner:
 [<img src='https://developer.chrome.com/webstore/images/ChromeWebStore_BadgeWBorder_v2_206x58.png'>](http://bit.ly/digg-notifier)
